@@ -10,6 +10,7 @@ TABLE_ROW_TAG = "table:table-row"
 TABLE_CELL_TAG = "table:table-cell"
 TABLE_CELL_TEXT_TAG = "text:p"
 TABLE_CELL_REPEATED_ATTRIB = "number-columns-repeated"
+TABLE_CELL_SPANNED_ATTRIB = "number-columns-spanned"
 VALUE_TYPE_ATTRIB = "value-type"
 
 
@@ -52,14 +53,27 @@ def is_float(cell):
 
 
 def get_value(cell, parsed=False):
-    text = cell.find(TABLE_CELL_TEXT_TAG, namespaces=cell.nsmap)
-    if text is None:
-        return None, 0
-    value = text.text
+    
+    text = cell.find(TABLE_CELL_TEXT_TAG, namespaces=cell.nsmap) 
+    if text is None: 
+        #return None, 0                    
+        value = None 
+        # CB 20220309 - merged cell may contain no text content but still takepart in as colums!
+        #               thus we have to check especially for spanned attributes
+    else:        
+        value = text.text
     if parsed and is_float(cell):
         value = float(value)
     n_repeated = cell.attrib.get(
         f"{{{cell.nsmap[TABLE_KEY]}}}{TABLE_CELL_REPEATED_ATTRIB}"
     )
+    n_spanned =cell.attrib.get(
+        f"{{{cell.nsmap[TABLE_KEY]}}}{TABLE_CELL_SPANNED_ATTRIB}"
+    ) 
+
     n_repeated = int(n_repeated) if n_repeated is not None else 0
-    return value, n_repeated
+    n_spanned = int(n_spanned) if n_spanned is not None else 0
+    return value, n_repeated, n_spanned
+
+
+    
